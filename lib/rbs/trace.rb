@@ -12,6 +12,7 @@ require_relative "trace/cli"
 require_relative "trace/cli/inline"
 require_relative "trace/cli/merge"
 require_relative "trace/file"
+require_relative "trace/missing_modules"
 require_relative "trace/inline_comment_visitor"
 require_relative "trace/overload_compact"
 require_relative "trace/return_value_visitor"
@@ -59,7 +60,12 @@ module RBS
 
     # @rbs (out_dir: String) -> void
     def save_files(out_dir:)
+      missing_modules.save_rbs(out_dir)
       files.each_value { |file| file.save_rbs(out_dir) }
+    end
+
+    def missing_modules
+      MissingModules.new(files.values.flat_map(&:declarations))
     end
 
     private

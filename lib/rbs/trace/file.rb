@@ -27,6 +27,8 @@ module RBS
         end
       end
 
+      def declarations = @decls.values
+
       # @rbs () -> String
       def with_rbs
         result = Prism.parse_file(@path)
