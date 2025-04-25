@@ -488,5 +488,36 @@ RSpec.describe RBS::Trace do
         RUBY
       end
     end
+
+    it "modules without method definitions are also defined" do
+      # cases A::B could happen with Rails' automatic modules
+      source = <<~RUBY
+        module A
+        end
+
+        A.const_set :B, Module.new
+
+        class A::B::C
+          def m = 1
+        end
+      RUBY
+      load_source(source) do |mod|
+        trace.enable { mod::A::B::C.new.m }
+
+        expect(trace.files.each_value.map(&:to_rbs).join).to eq(<<~RUBY)
+          class A::B::C
+            def m: () -> Integer
+          end
+        RUBY
+
+        expect(trace.missing_modules.to_rbs).to eq(<<~RUBY)
+          module ::A
+          end
+
+          module ::A::B
+          end
+        RUBY
+      end
+    end
   end
 end
